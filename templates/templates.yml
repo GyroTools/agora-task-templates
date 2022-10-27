@@ -233,55 +233,6 @@
               import_path: "/My Agora/compress_and_rename"
               import: true
 
-- name: "MRecon Reconstruction"
-  files:
-    - path: main
-      content: |
-        # This task performs a MRecon reconstruction on a Philips raw file. 
-        # The SENSE reference scan is taken into account if a Dataset relation 
-        # between raw file and refscan exists. 
-        # The reconstructed image files are put into a unique folder named after the raw file 
-        # Matlab and MRecon needs to be installed on the host server.
-
-        inputs:                
-          in1:
-            type: dataset
-            dataset_type: philips_raw                    
-            push_data: true
-
-        recon:  
-          host: <HOST_NAME>   
-          script_type: matlab  
-          script: |
-            {{ files.recon.content }}
-          artifacts:
-            images:
-              path: "{{ output_dir }}/*" 
-              import_path: "/My Agora/recons/{{ inputs.in1.raw.basename }}_{{ timestamp.datetime1 }}"
-              import: true
-
-    - path: recon.m
-      content: |
-        addpath('<PATH_TO_MRECON>');
-        S = [];
-
-        {% if inputs.in1.refscan %}
-        S = MRsense('{{ inputs.in1.refscan.raw.path }}', '{{ inputs.in1.raw.path }}');
-        {% elif inputs.in1.coil_survey %}
-        S = MRsense('{{ inputs.in1.coil_survey.raw.path }}', '{{ inputs.in1.raw.path }}');
-        {% endif %}
-
-        r = MRecon('{{ inputs.in1.raw.path }}');
-
-        if ~isempty(S)
-            S.Perform;
-            r.Parameter.Recon.Sensitivities = S;
-        end
-
-        r.Perform;
-        r.WriteRec('{{ output_dir }}/{{ inputs.in1.raw.basename }}.rec');
-        r.WritePar('{{ output_dir }}/{{ inputs.in1.raw.basename }}.par');
-
 - name: "Organize Studies by Date"
   files:
     - path: main
@@ -335,6 +286,55 @@
             date_str = datetime_object.strftime("%Y-%m-%d")
             date_folder = target_folder.get_or_create(date_str)
             exam.link_to_folder(date_folder)
+
+- name: "MRecon Reconstruction"
+  files:
+    - path: main
+      content: |
+        # This task performs a MRecon reconstruction on a Philips raw file. 
+        # The SENSE reference scan is taken into account if a Dataset relation 
+        # between raw file and refscan exists. 
+        # The reconstructed image files are put into a unique folder named after the raw file 
+        # Matlab and MRecon needs to be installed on the host server.
+
+        inputs:                
+          in1:
+            type: dataset
+            dataset_type: philips_raw                    
+            push_data: true
+
+        recon:  
+          host: <HOST_NAME>   
+          script_type: matlab  
+          script: |
+            {{ files.recon.content }}
+          artifacts:
+            images:
+              path: "{{ output_dir }}/*" 
+              import_path: "/My Agora/recons/{{ inputs.in1.raw.basename }}_{{ timestamp.datetime1 }}"
+              import: true
+
+    - path: recon.m
+      content: |
+        addpath('<PATH_TO_MRECON>');
+        S = [];
+
+        {% if inputs.in1.refscan %}
+        S = MRsense('{{ inputs.in1.refscan.raw.path }}', '{{ inputs.in1.raw.path }}');
+        {% elif inputs.in1.coil_survey %}
+        S = MRsense('{{ inputs.in1.coil_survey.raw.path }}', '{{ inputs.in1.raw.path }}');
+        {% endif %}
+
+        r = MRecon('{{ inputs.in1.raw.path }}');
+
+        if ~isempty(S)
+            S.Perform;
+            r.Parameter.Recon.Sensitivities = S;
+        end
+
+        r.Perform;
+        r.WriteRec('{{ output_dir }}/{{ inputs.in1.raw.basename }}.rec');
+        r.WritePar('{{ output_dir }}/{{ inputs.in1.raw.basename }}.par');
 
 - name: "All Fields"
   files:
