@@ -367,5 +367,38 @@
     "output_type": 1,
     "target_path": "recons/{{ inputs.in1.raw.basename }}_{{ timestamp.datetime1 }}",
     "host": -1
-  }
+  },
+
+  {
+    "id": 9,
+    "inputs": [],
+    "outputs": [],
+    "environment_variables": [],
+    "context_help": [],
+    "project": 2,
+    "needs_interaction_on_run": false,
+    "name": "Organize Studies by Date",
+    "description": "This task demonstrates the usage of the agora-python-interface: https://github.com/GyroTools/gtagora-connector-py\nIt will organize the data in the current project by putting all Studies measured on the same day into a seperate folder. The individual date folders will be place into a folder called \"organized_by_date\" which is created in the root folder of the  current project. \nThe task uses the agora-python interface to organize the Studies and create the date folders. It is run in a container provided by GyroTools which contains the interface.",
+    "container_name": "gyrotools/gtagora-connector-py",
+    "container_options": {
+        "engine": 0,
+        "repo_host_id": -1,
+        "mount_volumes": []
+    },
+    "command_type": "python",
+    "command_template": "from datetime import datetime\r\nfrom gtagora import Agora\r\n\r\n# this agora host\r\nserver = 'https://{{ host.address }}'\r\n# the api key of the current user (the api key can be created in the user profile)\r\napi_key = '{{ user.api_key }}'\r\n# the id of the current project\r\ncurrent_project_id = {{ project.id }}\r\n# the output folder \r\ntarget_folder = 'organized_by_date'\r\n\r\n# connect to Agora\r\nagora = Agora.create(server, api_key=api_key)\r\n\r\n# get the current project\r\nproject = agora.get_project(current_project_id)\r\n\r\n# get or create the target folder\r\nroot_folder = project.get_root_folder()\r\ntarget_folder = root_folder.get_or_create(target_folder)\r\n\r\n# iterate over all studies in the current project and place them in a date-folder\r\nexams = project.get_exams()\r\nfor exam in exams:\r\n    print(f'{exam.name}')\r\n    start_time = exam.start_time\r\n    datetime_object = datetime.strptime(start_time, '%Y-%m-%dT%H:%M:%S%z')\r\n    date_str = datetime_object.strftime(\"%Y-%m-%d\")\r\n    date_folder = target_folder.get_or_create(date_str)\r\n    exam.link_to_folder(date_folder)",
+    "command_options": {
+        "commandArgs": "",
+        "commandPath": "python"
+    },
+    "additional_files": [],
+    "keep_line_breaks": false,
+    "execute_version": null,
+    "success_exit_code": 0,
+    "parse_output_for_error": "",
+    "timeout": 600,
+    "output_type": 3,
+    "target_path": "",
+    "host": -1
+}
 ]
