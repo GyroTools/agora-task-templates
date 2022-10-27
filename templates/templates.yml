@@ -285,7 +285,10 @@
             datetime_object = datetime.strptime(start_time, '%Y-%m-%dT%H:%M:%S%z')
             date_str = datetime_object.strftime("%Y-%m-%d")
             date_folder = target_folder.get_or_create(date_str)
-            exam.link_to_folder(date_folder)
+            try:
+              exam.link_to_folder(date_folder)
+            except:
+              pass
 
 - name: "MRecon Reconstruction"
   files:
