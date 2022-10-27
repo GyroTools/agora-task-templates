@@ -282,7 +282,7 @@
         r.WriteRec('{{ output_dir }}/{{ inputs.in1.raw.basename }}.rec');
         r.WritePar('{{ output_dir }}/{{ inputs.in1.raw.basename }}.par');
 
-- name: "Python Script"
+- name: "Organize Studies by Date"
   files:
     - path: main
       content: |
