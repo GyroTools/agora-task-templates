@@ -248,7 +248,7 @@
         # and create the date folders. It is run in a container provided by
         # GyroTools which contains the interface
         organize:   
-          host: agora-master
+          host: <HOST_NAME>
           image: gyrotools/gtagora-connector-py  
           script_type: python
           script: |
