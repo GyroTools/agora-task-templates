@@ -6,7 +6,7 @@
         # and prints a text to the command line
         hello_world:   
           host: <HOST_NAME>
-          script: echo "hello world"        
+          script: echo "hello world"
 
 - name: "Hello World in Container"
   files:
@@ -34,7 +34,6 @@
             executable: python
           script: |
             print('hello world')
-            
 
 - name: "Hello World Matlab"
   files:
@@ -75,7 +74,7 @@
 - name: "Bart Toolbox in Container"
   files:
     - path: main
-      content: |    
+      content: |
         # A task which builds a container from a Dockerfile installing the bart toolbox.
         # Afterwards a bart command is run inside the container
         dockerfile:  
@@ -93,7 +92,7 @@
         RUN tar xzvf v0.7.00.tar.gz 
         WORKDIR /bart-0.7.00
         RUN make 
-        RUN make install 
+        RUN make install
 
 - name: "Local Task"
   files:
@@ -103,7 +102,7 @@
         local:   
           host: local
           script_type: command
-          script: echo "hello world" 
+          script: echo "hello world"
 
 - name: "Inputs / Outputs"
   files:
@@ -121,7 +120,7 @@
           target_filename: 
             type: string
             default: new_filename.nii
-        
+
         input_demo:     
           host: <HOST_NAME>      
           script: |            
@@ -130,7 +129,7 @@
             target:
               path: "{{ output_dir }}/{{ inputs.target_filename.value }}  "  
               import_path: "/My Agora/input_demo"
-              import: true        
+              import: true
 
 - name: "Artifacts"
   files:
@@ -175,7 +174,7 @@
         stages:
           - build   
           - test
-        
+
         create_file:  
           stage: build
           host: <HOST1>             
@@ -184,12 +183,12 @@
           artifacts:
             output:
               path: "{{ output_dir }}/build.txt"       
-        
+
         print_file:  
           stage: test
           host: <HOST2>             
           script: |            
-            cat {{ artifacts.output.path }}           
+            cat {{ artifacts.output.path }}
 
 - name: "Compress and Rename"
   files:
@@ -205,11 +204,11 @@
             type: dataset
             dataset_type: par_rec                    
             push_data: true
-        
+
         stages:
           - compress   
           - rename            
-        
+
         compress_file: 
           stage: compress  
           host: <HOST_1>
@@ -220,7 +219,7 @@
           artifacts:
             tar:
               path: "{{ output_dir }}/recfile.tar.gz"           
-        
+
         rename_zip: 
           stage: rename
           host: <HOST_2>
@@ -233,7 +232,6 @@
               path: "{{ output_dir }}/renamed_rec.tar.gz"
               import_path: "/My Agora/compress_and_rename"
               import: true
-        
 
 - name: "MRecon Reconstruction"
   files:
@@ -244,13 +242,13 @@
         # between raw file and refscan exists. 
         # The reconstructed image files are put into a unique folder named after the raw file 
         # Matlab and MRecon needs to be installed on the host server.
-        
+
         inputs:                
           in1:
             type: dataset
             dataset_type: philips_raw                    
             push_data: true
-        
+
         recon:  
           host: <HOST_NAME>   
           script_type: matlab  
@@ -266,24 +264,77 @@
       content: |
         addpath('<PATH_TO_MRECON>');
         S = [];
-        
+
         {% if inputs.in1.refscan %}
         S = MRsense('{{ inputs.in1.refscan.raw.path }}', '{{ inputs.in1.raw.path }}');
         {% elif inputs.in1.coil_survey %}
         S = MRsense('{{ inputs.in1.coil_survey.raw.path }}', '{{ inputs.in1.raw.path }}');
         {% endif %}
-        
+
         r = MRecon('{{ inputs.in1.raw.path }}');
-        
+
         if ~isempty(S)
             S.Perform;
             r.Parameter.Recon.Sensitivities = S;
         end
-        
+
         r.Perform;
         r.WriteRec('{{ output_dir }}/{{ inputs.in1.raw.basename }}.rec');
         r.WritePar('{{ output_dir }}/{{ inputs.in1.raw.basename }}.par');
-        
+
+- name: "Python Script"
+  files:
+    - path: main
+      content: |
+        # This task demonstrates the usage of the agora-python-interface:
+        # https://github.com/GyroTools/gtagora-connector-py
+        # It will organize the data in the current project by putting all 
+        # Studies measured on the same day into a seperate folder. The
+        # individual date folders will be place into a folder called 
+        # "organized_by_date" which is created in the root folder of the 
+        # current project. 
+        # The task uses the agora-python interface to organize the Studies
+        # and create the date folders. It is run in a container provided by
+        # GyroTools which contains the interface
+        organize:   
+          host: agora-master
+          image: gyrotools/gtagora-connector-py  
+          script_type: python
+          script: |
+            {{ files.organize.content }}
+    - path: organize.py
+      content: |
+        from datetime import datetime
+        from gtagora import Agora
+
+        # this agora host
+        server = 'https://{{ host.address }}'
+        # the api key of the current user (the api key can be created in the user profile)
+        api_key = '{{ user.api_key }}'
+        # the id of the current project
+        current_project_id = {{ project.id }}
+        # the output folder 
+        target_folder = 'organized_by_date'
+
+        # connect to Agora
+        agora = Agora.create(server, api_key=api_key)
+
+        # get the current project
+        project = agora.get_project(current_project_id)
+
+        # get or create the target folder
+        root_folder = project.get_root_folder()
+        target_folder = root_folder.get_or_create(target_folder)
+
+        # iterate over all studies in the current project and place them in a date-folder
+        exams = project.get_exams()
+        for exam in exams:
+            print(f'{exam.name}')
+            start_time = exam.start_time
+            datetime_object = datetime.strptime(start_time, '%Y-%m-%dT%H:%M:%S%z')
+            date_str = datetime_object.strftime("%Y-%m-%d")
+            date_folder = target_folder.get_or_create(date_str)
+            exam.link_to_folder(date_folder)
 
 - name: "All Fields"
   files:
@@ -341,14 +392,14 @@
             type: boolean                         
             default: false            
             required: true        
-        
-        
+
+
         stages:
           - stage1   
           - stage2            
           - stage3            
-        
-        
+
+
         stage1: 
           stage: stage1  
           host: <HOST_NAME>
@@ -387,8 +438,8 @@
             executable: python
           script: |
             {{ files.python_script.content }}
-        
-        
+
+
         stage3: 
           stage: stage3   
           host: local
@@ -406,10 +457,10 @@
       content: |
         for i in range(0,10):
           print(i)
-        print('finished')   
+        print('finished')
 
     - path: matlab_script.m
       content: |
         for i = 1:10
           disp(i)
-        disp('finished')   
+        disp('finished')
