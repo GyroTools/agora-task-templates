@@ -1,0 +1,371 @@
+[
+  {
+    "id": 0,
+    "inputs": [],
+    "outputs": [],
+    "environment_variables": [],
+    "context_help": [],
+    "project": null,
+    "needs_interaction_on_run": false,
+    "name": "Hello World",
+    "description": "Simple task which runs natively on a host server and prints a text to the command line",
+    "container_name": "",
+    "container_options": {
+        "engine": 1,
+        "repo_host_id": -1,
+        "mount_volumes": []
+    },
+    "command_type": "command",
+    "command_template": "echo \"hello-world\"",
+    "command_options": {
+        "keepLineBreaks": false
+    },
+    "additional_files": [],
+    "keep_line_breaks": false,
+    "execute_version": null,
+    "success_exit_code": 0,
+    "parse_output_for_error": "",
+    "timeout": 600,
+    "output_type": 3,
+    "target_path": "",
+    "host": -1
+  },
+
+  {
+    "id": 1,
+    "inputs": [],
+    "outputs": [],
+    "environment_variables": [],
+    "context_help": [],
+    "project": 7,
+    "needs_interaction_on_run": false,
+    "name": "Hello World in Container",
+    "description": "Simple task which runs in a ubuntu container and prints a text to the command line",
+    "container_name": "ubuntu:22.04",
+    "container_options": {
+        "engine": 1,
+        "repo_host_id": -1,
+        "mount_volumes": []
+    },
+    "command_type": "command",
+    "command_template": "echo \"hello-world\"",
+    "command_options": {
+        "keepLineBreaks": false
+    },
+    "additional_files": [],
+    "keep_line_breaks": false,
+    "execute_version": null,
+    "success_exit_code": 0,
+    "parse_output_for_error": "",
+    "timeout": 600,
+    "output_type": 3,
+    "target_path": "",
+    "host": -1
+  },
+
+  {
+    "id": 2,
+    "inputs": [],
+    "outputs": [],
+    "environment_variables": [],
+    "context_help": [],
+    "project": 7,
+    "needs_interaction_on_run": false,
+    "name": "Hello World Python",
+    "description": "Simple Python task which prints a text to the command line",
+    "container_name": "",
+    "container_options": {
+        "engine": 1,
+        "repo_host_id": -1,
+        "mount_volumes": []
+    },
+    "command_type": "python",
+    "command_template": "print('hello-world')",
+    "command_options": {
+        "commandArgs": "",
+        "commandPath": "python"
+    },
+    "additional_files": [],
+    "keep_line_breaks": false,
+    "execute_version": null,
+    "success_exit_code": 0,
+    "parse_output_for_error": "",
+    "timeout": 600,
+    "output_type": 3,
+    "target_path": "",
+    "host": -1
+  },
+
+  {
+    "id": 3,
+    "inputs": [],
+    "outputs": [],
+    "environment_variables": [],
+    "context_help": [],
+    "project": 7,
+    "needs_interaction_on_run": false,
+    "name": "Hello World Matlab",
+    "description": "Simple Matlab task which prints a text to the command line. Matlab needs to be installed on the specified host.",
+    "container_name": "",
+    "container_options": {
+        "engine": 1,
+        "repo_host_id": -1,
+        "mount_volumes": []
+    },
+    "command_type": "matlab",
+    "command_template": "disp('hello-world')",
+    "command_options": {
+        "commandArgs": "",
+        "commandPath": "matlab"
+    },
+    "additional_files": [],
+    "keep_line_breaks": false,
+    "execute_version": null,
+    "success_exit_code": 0,
+    "parse_output_for_error": "",
+    "timeout": 600,
+    "output_type": 3,
+    "target_path": "",
+    "host": -1
+  },
+
+  {
+    "id": 4,
+    "inputs": [],
+    "outputs": [],
+    "environment_variables": [],
+    "context_help": [],
+    "project": 7,
+    "needs_interaction_on_run": false,
+    "name": "Python Additional File",
+    "description": "A python task which includes a function from a separate file.",
+    "container_name": "",
+    "container_options": {
+        "engine": 1,
+        "repo_host_id": -1,
+        "mount_volumes": []
+    },
+    "command_type": "python",
+    "command_template": "from count import count\r\n\r\ncount()",
+    "command_options": {
+        "commandArgs": "",
+        "commandPath": "python3"
+    },
+    "additional_files": [
+        {
+            "name": "count.py",
+            "content": "def count():\r\n  for i in range(0,10):\r\n    print(i)\r\n  print('finished')"
+        }
+    ],
+    "keep_line_breaks": false,
+    "execute_version": null,
+    "success_exit_code": 0,
+    "parse_output_for_error": "",
+    "timeout": 600,
+    "output_type": 3,
+    "target_path": "",
+    "host": -1
+  },
+
+  {
+    "id": 5,
+    "inputs": [],
+    "outputs": [],
+    "environment_variables": [],
+    "context_help": [],
+    "project": 7,
+    "needs_interaction_on_run": false,
+    "name": "Bart Toolbox in Container",
+    "description": "A task which builds a container from a Dockerfile installing the bart toolbox. Afterwards a bart command is run inside the container",
+    "container_name": "bart-0.7.00",
+    "container_options": {
+        "engine": 0,
+        "repo_host_id": -1,
+        "mount_volumes": []
+    },
+    "command_type": "command",
+    "command_template": "bart version",
+    "command_options": {
+        "keepLineBreaks": false
+    },
+    "additional_files": [
+        {
+            "name": "Dockerfile",
+            "content": "FROM debian:bullseye\r\nRUN apt-get update \r\nRUN apt-get install -y wget make gcc libfftw3-dev liblapacke-dev libpng-dev libopenblas-dev \r\nRUN wget https://github.com/mrirecon/bart/archive/v0.7.00.tar.gz \r\nRUN tar xzvf v0.7.00.tar.gz \r\nWORKDIR /bart-0.7.00\r\nRUN make \r\nRUN make install "
+        }
+    ],
+    "keep_line_breaks": false,
+    "execute_version": null,
+    "success_exit_code": 0,
+    "parse_output_for_error": "",
+    "timeout": 600,
+    "output_type": 3,
+    "target_path": "",
+    "host": -1
+  },
+
+  {
+    "id": 6,
+    "inputs": [
+        {
+            "id": null,
+            "key": "nifti",
+            "description": "",
+            "required": true,
+            "order": 0,
+            "type": 3,
+            "data_set_type": 600,
+            "filename_regex": null,
+            "min": null,
+            "max": null,
+            "default_value": "",
+            "select_values": null,
+            "static_input_path": null,
+            "push_data": true
+        },
+        {
+            "id": null,
+            "key": "target_filename",
+            "description": "",
+            "required": true,
+            "order": 0,
+            "type": 5,
+            "data_set_type": null,
+            "filename_regex": null,
+            "min": null,
+            "max": null,
+            "default_value": "new_filename.nii",
+            "select_values": null,
+            "static_input_path": null,
+            "push_data": true
+        }
+    ],
+    "outputs": [],
+    "environment_variables": [],
+    "context_help": [],
+    "project": 7,
+    "needs_interaction_on_run": true,
+    "name": "Inputs & Outputs",
+    "description": "A task which demonstrates the usage inputs and outputs. \nIt takes a nifti file and a string as input which represents a target filename. It then creates a  copy of the nifti file and renames it according to the filename given as input. Finally the copy of the nifti file is re-imported back into Agora",
+    "container_name": "",
+    "container_options": {
+        "engine": 0,
+        "repo_host_id": -1,
+        "mount_volumes": []
+    },
+    "command_type": "command",
+    "command_template": "cp {{ inputs.nifti.file.path }} {{ output_dir }}/{{ inputs.target_filename.value }}",
+    "command_options": {
+        "keepLineBreaks": false
+    },
+    "additional_files": [],
+    "keep_line_breaks": false,
+    "execute_version": null,
+    "success_exit_code": 0,
+    "parse_output_for_error": "",
+    "timeout": 600,
+    "output_type": 1,
+    "target_path": "input_demo",
+    "host": -1
+  },
+
+  {
+    "id": 7,
+    "inputs": [
+        {
+            "id": null,
+            "key": "in1",
+            "description": "",
+            "required": true,
+            "order": 0,
+            "type": 3,
+            "data_set_type": 101,
+            "filename_regex": null,
+            "min": null,
+            "max": null,
+            "default_value": "",
+            "select_values": null,
+            "static_input_path": null,
+            "push_data": true
+        }
+    ],
+    "outputs": [],
+    "environment_variables": [],
+    "context_help": [],
+    "project": 7,
+    "needs_interaction_on_run": true,
+    "name": "Compress Par/Rec File and Import",
+    "description": "A task which demonstrates inputs and outputs. The task takes a par/rec dataset as input and compresses it. Afterwards the compressed file is re-imported into a user-defined folder",
+    "container_name": "ubuntu:22.04",
+    "container_options": {
+        "engine": 0,
+        "repo_host_id": -1,
+        "mount_volumes": []
+    },
+    "command_type": "bash",
+    "command_template": "echo \"compressing...\"\r\ntar -czvf {{ output_dir }}/recfile.tar.gz {{ inputs.in1.rec.path }} {{ inputs.in1.par.path }}",
+    "command_options": {
+        "commandArgs": "",
+        "commandPath": "bash"
+    },
+    "additional_files": [],
+    "keep_line_breaks": false,
+    "execute_version": null,
+    "success_exit_code": 0,
+    "parse_output_for_error": "",
+    "timeout": 600,
+    "output_type": 1,
+    "target_path": "compress",
+    "host": -1
+  },
+
+  {
+    "id": 8,
+    "inputs": [
+        {
+            "id": null,
+            "key": "in1",
+            "description": "",
+            "required": true,
+            "order": 0,
+            "type": 3,
+            "data_set_type": 100,
+            "filename_regex": null,
+            "min": null,
+            "max": null,
+            "default_value": "",
+            "select_values": null,
+            "static_input_path": null,
+            "push_data": true
+        }
+    ],
+    "outputs": [],
+    "environment_variables": [],
+    "context_help": [],
+    "project": 7,
+    "needs_interaction_on_run": true,
+    "name": "MRecon Reconstruction",
+    "description": "This task performs a MRecon reconstruction on a Philips raw file. The SENSE reference scan is taken into account if a Dataset relation between raw file and refscan exists.\nThe reconstructed image files are put into a unique folder named after the raw file.\nMatlab and MRecon needs to be installed on the host server",
+    "container_name": "",
+    "container_options": {
+        "engine": 0,
+        "repo_host_id": -1,
+        "mount_volumes": []
+    },
+    "command_type": "matlab",
+    "command_template": "addpath('<PATH_TO_MRECON>');\r\n\r\nS = [];\r\n\r\n{% if inputs.in1.refscan %}\r\nS = MRsense('{{ inputs.in1.refscan.raw.path }}', '{{ inputs.in1.raw.path }}');\r\n{% elif inputs.in1.coil_survey %}\r\nS = MRsense('{{ inputs.in1.coil_survey.raw.path }}', '{{ inputs.in1.raw.path }}');\r\n{% endif %}\r\n\r\nr = MRecon('{{ inputs.in1.raw.path }}');\r\n\r\nif ~isempty(S)\r\n    S.Perform;\r\n    r.Parameter.Recon.Sensitivities = S;\r\nend\r\n\r\nr.Perform;\r\nr.WriteRec('{{ output_dir }}/{{ inputs.in1.raw.basename }}.rec');\r\nr.WritePar('{{ output_dir }}/{{ inputs.in1.raw.basename }}.par');",
+    "command_options": {
+        "commandArgs": "",
+        "commandPath": "matlab"
+    },
+    "additional_files": [],
+    "keep_line_breaks": false,
+    "execute_version": null,
+    "success_exit_code": 0,
+    "parse_output_for_error": "",
+    "timeout": 600,
+    "output_type": 1,
+    "target_path": "recons/{{ inputs.in1.raw.basename }}_{{ timestamp.datetime1 }}",
+    "host": -1
+  }
+]

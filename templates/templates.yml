@@ -1,0 +1,415 @@
+- name: "Hello World"
+  files:
+    - path: main
+      content: |
+        # Simple task which runs natively on a host server
+        # and prints a text to the command line
+        hello_world:   
+          host: <HOST_NAME>
+          script: echo "hello world"        
+
+- name: "Hello World in Container"
+  files:
+    - path: main
+      content: |
+        # Simple task which runs in a container
+        # and prints a text to the command line
+        hello_world:  
+          host: <HOST_NAME>
+          image: ubuntu:22.04
+          script: echo "hello world"
+
+- name: "Hello World Python"
+  files:
+    - path: main
+      content: |
+        # Simple Python task which prints a text 
+        # to the command line. 
+        # The python executable can be specified 
+        # in the python_options (on some systems it is "python3")
+        hello_world_python:  
+          host: <HOST_NAME>
+          script_type: python
+          python_options:
+            executable: python
+          script: |
+            print('hello world')
+            
+
+- name: "Hello World Matlab"
+  files:
+    - path: main
+      content: |
+        # Simple Matlab task which prints a text 
+        # to the command line. Matlab needs to be 
+        # installed on the specified host
+        # The path to the Matlab executable can be 
+        # specified in the matlab_options
+        hello_world_matlab:  
+          host: <HOST_NAME>
+          script_type: matlab    
+          matlab_options:
+            executable: matlab
+          script: |
+            disp('hello world')
+
+- name: "Python Script"
+  files:
+    - path: main
+      content: |
+        # A python task which includes the script from
+        # a separate file.        
+        python_script:  
+          host: <HOST_NAME>
+          script_type: python
+          python_options:
+            executable: python
+          script: |
+            {{ files.count.content }}
+    - path: count.py
+      content: |
+        for i in range(0,10):
+          print(i)
+        print('finished')
+
+- name: "Bart Toolbox in Container"
+  files:
+    - path: main
+      content: |    
+        # A task which builds a container from a Dockerfile installing the bart toolbox.
+        # Afterwards a bart command is run inside the container
+        dockerfile:  
+          host: <HOST_NAME>
+          dockerfile:
+            name: Dockerfile
+            image_name: bart-0.7.00                    
+          script: bart version
+    - path: Dockerfile
+      content: |
+        FROM debian:bullseye
+        RUN apt-get update 
+        RUN apt-get install -y wget make gcc libfftw3-dev liblapacke-dev libpng-dev libopenblas-dev 
+        RUN wget https://github.com/mrirecon/bart/archive/v0.7.00.tar.gz 
+        RUN tar xzvf v0.7.00.tar.gz 
+        WORKDIR /bart-0.7.00
+        RUN make 
+        RUN make install 
+
+- name: "Local Task"
+  files:
+    - path: main
+      content: |
+        # Simple task which runs on your local machine using the agora-app      
+        local:   
+          host: local
+          script_type: command
+          script: echo "hello world" 
+
+- name: "Inputs / Outputs"
+  files:
+    - path: main
+      content: |
+        # A task which demonstrates the usage inputs and outputs. It takes a nifti file
+        # and a string as input which represents a target filename. It then creates a 
+        # copy of the nifti file and renames it according to the filename given as input.
+        # Finally the copy of the nifti file is re-imported back into Agora
+        inputs:                
+          nifti:
+            type: dataset
+            dataset_type: nifti1                    
+            push_data: true
+          target_filename: 
+            type: string
+            default: new_filename.nii
+        
+        input_demo:     
+          host: <HOST_NAME>      
+          script: |            
+            cp {{ inputs.nifti.file.path }} {{ output_dir }}/{{ inputs.target_filename.value }}
+          artifacts:
+            target:
+              path: "{{ output_dir }}/{{ inputs.target_filename.value }}  "  
+              import_path: "/My Agora/input_demo"
+              import: true        
+
+- name: "Artifacts"
+  files:
+    - path: main
+      content: |
+        # A task which demonstrates the usage of artifacts. It creates several
+        # files and then re-imports some of them back to Agora
+        artifact_demo:   
+          host: <HOST_NAME>             
+          script: |            
+            mkdir {{ output_dir }}/dir1
+            mkdir {{ output_dir }}/dir2        
+            touch {{ output_dir }}/test1.txt
+            touch {{ output_dir }}/dir1/test2.txt
+            touch {{ output_dir }}/dir1/test3.txt
+            touch {{ output_dir }}/dir2/test4.txt
+          artifacts:
+            file1:
+              path: "{{ output_dir }}/test1.txt"  
+              import_path: "/My Agora/artifacts"
+              import: true
+            dir1:
+              path: "{{ output_dir }}/dir1/"  
+              import_path: "/My Agora/artifacts"
+              import: true
+            file_not_imported:
+              path: "{{ output_dir }}/dir2/test4.txt"
+              import: false
+
+- name: "Stages"
+  files:
+    - path: main
+      content: |
+        # A task which demonstrates the usage of stages. 
+        # A task can contain multiple jobs and each job belongs to a stage. Jobs 
+        # from the same stage run in parallel while jobds from different stages
+        # run sequentially. The different stages and their processing order are 
+        # defined at the beginning of the task. 
+        # This task defines 2 stages which run on different hosts. The first stage 
+        # creates a file and the second stage prints its content to the stdout. 
+        # The data between the stages is shared via artifacts.                 
+        stages:
+          - build   
+          - test
+        
+        create_file:  
+          stage: build
+          host: <HOST1>             
+          script: |            
+            echo "created in build stage" > {{ output_dir }}/build.txt
+          artifacts:
+            output:
+              path: "{{ output_dir }}/build.txt"       
+        
+        print_file:  
+          stage: test
+          host: <HOST2>             
+          script: |            
+            cat {{ artifacts.output.path }}           
+
+- name: "Compress and Rename"
+  files:
+    - path: main
+      content: |
+        # A task which demonstrates inputs, stages and artifacts.
+        # The task takes a par/rec dataset as input and defines 2 stages which run on different hosts.
+        # Data is shared between the stages via artifacts. 
+        # The first stage compresses the par/rec files and defines the compressed file as artifact. The second stage
+        # runs on a different host, renames the compressed file and imports the renamed file back to agora.
+        inputs:                
+          in1:
+            type: dataset
+            dataset_type: par_rec                    
+            push_data: true
+        
+        stages:
+          - compress   
+          - rename            
+        
+        compress_file: 
+          stage: compress  
+          host: <HOST_1>
+          image: ubuntu:22.04
+          script: |
+            echo "compressing..."
+            tar -czvf {{ output_dir }}/recfile.tar.gz {{ inputs.in1.rec.path }} {{ inputs.in1.par.path }}            
+          artifacts:
+            tar:
+              path: "{{ output_dir }}/recfile.tar.gz"           
+        
+        rename_zip: 
+          stage: rename
+          host: <HOST_2>
+          image: ubuntu:22.04
+          script: |   
+            echo "renaming tar..."
+            mv {{ artifacts.tar.path }} {{ output_dir }}/renamed_rec.tar.gz            
+          artifacts:
+            tar_renamed:
+              path: "{{ output_dir }}/renamed_rec.tar.gz"
+              import_path: "/My Agora/compress_and_rename"
+              import: true
+        
+
+- name: "MRecon Reconstruction"
+  files:
+    - path: main
+      content: |
+        # This task performs a MRecon reconstruction on a Philips raw file. 
+        # The SENSE reference scan is taken into account if a Dataset relation 
+        # between raw file and refscan exists. 
+        # The reconstructed image files are put into a unique folder named after the raw file 
+        # Matlab and MRecon needs to be installed on the host server.
+        
+        inputs:                
+          in1:
+            type: dataset
+            dataset_type: philips_raw                    
+            push_data: true
+        
+        recon:  
+          host: <HOST_NAME>   
+          script_type: matlab  
+          script: |
+            {{ files.recon.content }}
+          artifacts:
+            images:
+              path: "{{ output_dir }}/*" 
+              import_path: "/My Agora/recons/{{ inputs.in1.raw.basename }}_{{ timestamp.datetime1 }}"
+              import: true
+
+    - path: recon.m
+      content: |
+        addpath('<PATH_TO_MRECON>');
+        S = [];
+        
+        {% if inputs.in1.refscan %}
+        S = MRsense('{{ inputs.in1.refscan.raw.path }}', '{{ inputs.in1.raw.path }}');
+        {% elif inputs.in1.coil_survey %}
+        S = MRsense('{{ inputs.in1.coil_survey.raw.path }}', '{{ inputs.in1.raw.path }}');
+        {% endif %}
+        
+        r = MRecon('{{ inputs.in1.raw.path }}');
+        
+        if ~isempty(S)
+            S.Perform;
+            r.Parameter.Recon.Sensitivities = S;
+        end
+        
+        r.Perform;
+        r.WriteRec('{{ output_dir }}/{{ inputs.in1.raw.basename }}.rec');
+        r.WritePar('{{ output_dir }}/{{ inputs.in1.raw.basename }}.par');
+        
+
+- name: "All Fields"
+  files:
+    - path: main
+      content: |
+        # This template contains all available fields and options
+        inputs:                
+          in1:
+            type: study                         
+            push_data: true
+            required: true
+          in2:
+            type: series                         
+            push_data: true
+            required: true
+          in3:
+            type: dataset  
+            dataset_type: philips_raw
+            # dataset_type: par_rec
+            # dataset_type: bruker_raw
+            # dataset_type: bruker_subject
+            # dataset_type: bruker_image
+            # dataset_type: siemens_raw
+            # dataset_type: ismrmrd
+            # dataset_type: dicom
+            # dataset_type: nifti1
+            # dataset_type: nifti2
+            # dataset_type: nifti_analyse
+            # dataset_type: philips_spectro
+            # dataset_type: jmrui_spectro
+            # dataset_type: other            
+            push_data: true
+            required: true
+          in4:
+            type: folder                         
+            push_data: true
+            required: true
+          in5:
+            type: string                         
+            default: "test"
+            required: true    
+          in6:
+            type: integer                         
+            default: 0
+            min: -10
+            max: 10
+            required: true
+          in7:
+            type: float                         
+            default: 0.0
+            min: -10.0
+            max: 10.0
+            required: true      
+          in8:
+            type: boolean                         
+            default: false            
+            required: true        
+        
+        
+        stages:
+          - stage1   
+          - stage2            
+          - stage3            
+        
+        
+        stage1: 
+          stage: stage1  
+          host: <HOST_NAME>
+          script_type: command
+          # script_type: bash
+          # script_type: python
+          # script_type: matlab
+          description: "A description for the task" 
+          image: ubuntu:22.04
+          container_engine: docker
+          # container_engine: podman
+          image_repo: <DOCKER_HOST_NAME>           
+          env: 
+            ENV_VARIABLE_1: a_value
+            ENV_VARIABLE_2: another_value
+            ENV_VARIABLE_3: "value"
+          script: |
+            touch "{{ output_dir }}/test.txt"         
+          artifacts:
+            test_file:
+              path: "{{ output_dir }}/test.txt" 
+              import_path: "/My Agora/test"
+              import: true
+          use_inputs: true
+          use_artifacts: true
+             
+                
+        stage2: 
+          stage: stage2   
+          host: <HOST_NAME>
+          script_type: python
+          dockerfile:
+            name: Dockerfile
+            image_name: test_container        
+          python_options:
+            executable: python
+          script: |
+            {{ files.python_script.content }}
+        
+        
+        stage3: 
+          stage: stage3   
+          host: local
+          script_type: matlab
+          matlab_options:
+            executable: matlab
+          script: |
+            {{ files.matlab_script.content }}
+
+    - path: Dockerfile
+      content: |
+        FROM ubuntu:22.04
+
+    - path: python_script.py
+      content: |
+        for i in range(0,10):
+          print(i)
+        print('finished')   
+
+    - path: matlab_script.m
+      content: |
+        for i = 1:10
+          disp(i)
+        disp('finished')   
